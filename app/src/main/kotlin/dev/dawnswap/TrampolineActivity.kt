@@ -40,9 +40,7 @@ class TrampolineActivity : Activity() {
         // Consumed before launching, synchronously. Two taps in quick succession then cannot
         // both find the swap armed, and being killed mid-flow costs one redirect rather than
         // leaving a swap that keeps firing all morning. It fails closed.
-        if (decision.consume) {
-            config.window.occurrenceDate(now)?.let(repository::markConsumed)
-        }
+        decision.consumes?.let(repository::markConsumed)
 
         val launch = Launcher.intentFor(this, decision.target)
         if (launch == null || !open(launch)) {
@@ -51,7 +49,7 @@ class TrampolineActivity : Activity() {
             return
         }
 
-        if (decision.consume) {
+        if (decision.consumes != null) {
             ShortcutController.refresh(this)
         }
     }

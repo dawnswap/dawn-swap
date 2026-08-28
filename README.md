@@ -74,15 +74,21 @@ So the swap is keyed on the date the current window *occurrence started* — see
 ## Building it
 
 ```bash
-gradle :logic:test        # unit tests, JDK only
-gradle :app:assembleDebug # the APK
+gradle :logic:test             # decision logic, JDK only
+gradle :app:testDebugUnitTest  # Android layer, via Robolectric
+gradle :app:assembleDebug      # the APK
 ```
 
-You need JDK 17 and the Android SDK (platform 35). CI does both on every push, and uploads the debug APK — grab it from the **Actions** tab if you'd rather not build locally.
+You need JDK 17 and the Android SDK (platform 35). CI runs all of it on every push and uploads the debug APK — grab it from the **Actions** tab if you'd rather not build locally.
 
 ## Status
 
-The decision logic is covered by the unit suite and verified in CI. The Android layer compiles in CI but has **not been tested on a physical device** — if you run it and something misbehaves, please open an issue with your launcher and Android version.
+Both layers are covered by tests that run on every push, and CI refuses to report success if either module executes zero tests.
+
+- **Decision logic** — exhaustively tested, including minute-by-minute sweeps across a full day for both normal and midnight-crossing windows.
+- **Android layer** — tested with Robolectric, which stands the real activity up on the JVM. The end-to-end path is asserted the way a launcher actually drives it: build the intent a pinned shortcut carries, hand it to the trampoline, and check which app comes out.
+
+It has still **not run on physical hardware**. If you install it and something misbehaves, please open an issue with your launcher and Android version.
 
 ## Licence
 

@@ -2,6 +2,8 @@ package dev.dawnswap.logic
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -18,6 +20,8 @@ class SwapDeciderTest {
         real = instagram,
         decoy = localNews,
     )
+
+    private val overnightConfig = morningConfig.copy(window = SwapWindow.of(23, 0, 2, 0))
 
     private fun decide(
         config: SwapConfig = morningConfig,
@@ -37,26 +41,31 @@ class SwapDeciderTest {
 
         assertEquals(localNews, decision.target)
         assertTrue(decision.armed)
-        assertTrue(decision.consume)
+        assertEquals(LocalDate.of(2026, 3, 14), decision.consumes)
     }
 
     @Test
     fun `every tap after the first opens the original app`() {
-        val consumedToday = LocalDate.of(2026, 3, 14)
-        val decision = decide(lastConsumed = consumedToday, at = at(2026, 3, 14, 7, 5))
+        val decision = decide(
+            lastConsumed = LocalDate.of(2026, 3, 14),
+            at = at(2026, 3, 14, 7, 5),
+        )
 
         assertEquals(instagram, decision.target)
         assertFalse(decision.armed)
-        assertFalse(decision.consume)
+        assertNull(decision.consumes)
     }
 
     @Test
     fun `the swap re-arms the following morning`() {
-        val consumedYesterday = LocalDate.of(2026, 3, 13)
-        val decision = decide(lastConsumed = consumedYesterday, at = at(2026, 3, 14, 7, 0))
+        val decision = decide(
+            lastConsumed = LocalDate.of(2026, 3, 13),
+            at = at(2026, 3, 14, 7, 0),
+        )
 
         assertEquals(localNews, decision.target)
         assertTrue(decision.armed)
+        assertEquals(LocalDate.of(2026, 3, 14), decision.consumes)
     }
 
     // --- Outside the window ------------------------------------------------------------
@@ -67,7 +76,7 @@ class SwapDeciderTest {
 
         assertEquals(instagram, decision.target)
         assertFalse(decision.armed)
-        assertFalse(decision.consume)
+        assertNull(decision.consumes)
     }
 
     @Test
@@ -87,7 +96,19 @@ class SwapDeciderTest {
 
         assertEquals(instagram, decision.target)
         assertFalse(decision.armed)
-        assertFalse(decision.consume)
+        assertNull(decision.consumes)
+    }
+
+    @Test
+    fun `a disabled swap leaves the second slot on the replacement app`() {
+        val decision = decide(
+            config = morningConfig.copy(enabled = false),
+            at = at(2026, 3, 14, 7, 0),
+            slot = Slot.SECONDARY,
+        )
+
+        assertEquals(localNews, decision.target)
+        assertFalse(decision.armed)
     }
 
     @Test
@@ -105,19 +126,17 @@ class SwapDeciderTest {
     // A 23:00-02:00 window must fire once per NIGHT. Keying "once a day" on the calendar
     // date would let it fire again the moment the date rolls over at midnight.
 
-    private val overnightConfig = morningConfig.copy(window = SwapWindow.of(23, 0, 2, 0))
-
     @Test
     fun `an overnight swap fires before midnight`() {
         val decision = decide(config = overnightConfig, at = at(2026, 3, 14, 23, 30))
 
         assertEquals(localNews, decision.target)
-        assertTrue(decision.consume)
+        assertEquals(LocalDate.of(2026, 3, 14), decision.consumes)
     }
 
     @Test
     fun `an overnight swap does not fire again after midnight the same night`() {
-        val consumedAt2330 = overnightConfig.window.occurrenceDate(at(2026, 3, 14, 23, 30))
+        val consumedAt2330 = decide(config = overnightConfig, at = at(2026, 3, 14, 23, 30)).consumes
         val decision = decide(
             config = overnightConfig,
             lastConsumed = consumedAt2330,
@@ -126,12 +145,12 @@ class SwapDeciderTest {
 
         assertEquals(instagram, decision.target)
         assertFalse(decision.armed)
-        assertFalse(decision.consume)
+        assertNull(decision.consumes)
     }
 
     @Test
     fun `an overnight swap fires again the next night`() {
-        val consumedLastNight = overnightConfig.window.occurrenceDate(at(2026, 3, 14, 23, 30))
+        val consumedLastNight = decide(config = overnightConfig, at = at(2026, 3, 14, 23, 30)).consumes
         val decision = decide(
             config = overnightConfig,
             lastConsumed = consumedLastNight,
@@ -139,22 +158,36 @@ class SwapDeciderTest {
         )
 
         assertEquals(localNews, decision.target)
-        assertTrue(decision.armed)
+        assertEquals(LocalDate.of(2026, 3, 15), decision.consumes)
     }
 
     @Test
     fun `an overnight swap first tapped after midnight fires only once`() {
         val firstTap = decide(config = overnightConfig, at = at(2026, 3, 15, 0, 15))
-        assertTrue(firstTap.consume)
+        assertEquals(LocalDate.of(2026, 3, 14), firstTap.consumes)
 
-        val consumed = overnightConfig.window.occurrenceDate(at(2026, 3, 15, 0, 15))
         val secondTap = decide(
             config = overnightConfig,
-            lastConsumed = consumed,
+            lastConsumed = firstTap.consumes,
             at = at(2026, 3, 15, 1, 45),
         )
         assertFalse(secondTap.armed)
         assertEquals(instagram, secondTap.target)
+    }
+
+    @Test
+    fun `an overnight swap consumed after midnight still arms that same evening`() {
+        // Consumed at 00:15 on the 15th, which belongs to the 14th's occurrence. The window
+        // that opens at 23:00 on the 15th is a new occurrence and must arm.
+        val consumed = LocalDate.of(2026, 3, 14)
+        val decision = decide(
+            config = overnightConfig,
+            lastConsumed = consumed,
+            at = at(2026, 3, 15, 23, 5),
+        )
+
+        assertTrue(decision.armed)
+        assertEquals(LocalDate.of(2026, 3, 15), decision.consumes)
     }
 
     // --- Swap mode: the second slot ----------------------------------------------------
@@ -168,13 +201,6 @@ class SwapDeciderTest {
     }
 
     @Test
-    fun `the second slot never uses up the swap`() {
-        val decision = decide(at = at(2026, 3, 14, 7, 0), slot = Slot.SECONDARY)
-
-        assertFalse(decision.consume)
-    }
-
-    @Test
     fun `outside the window the second slot opens the replacement app as usual`() {
         val decision = decide(at = at(2026, 3, 14, 15, 0), slot = Slot.SECONDARY)
 
@@ -184,12 +210,12 @@ class SwapDeciderTest {
 
     @Test
     fun `the two slots always hold different apps`() {
-        for (hour in 0..23) {
-            val moment = at(2026, 3, 14, hour, 0)
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val moment = at(2026, 3, 14, 0, 0).plusMinutes(minute.toLong())
             val primary = decide(at = moment, slot = Slot.PRIMARY).target
             val secondary = decide(at = moment, slot = Slot.SECONDARY).target
 
-            assertTrue(primary != secondary, "slots collided at ${hour}:00")
+            assertTrue(primary != secondary, "slots collided at minute $minute")
         }
     }
 
@@ -224,25 +250,106 @@ class SwapDeciderTest {
         }
     }
 
-    @Test
-    fun `only the primary slot can ever consume the swap`() {
-        val consumingDecisions = buildList {
-            for (hour in 0..23) {
-                for (slot in Slot.entries) {
-                    val decision = decide(at = at(2026, 3, 14, hour, 0), slot = slot)
-                    if (decision.consume) add(slot)
-                }
-            }
-        }
+    // --- Exhaustive sweeps -------------------------------------------------------------
 
-        assertTrue(consumingDecisions.isNotEmpty(), "expected at least one consuming tap")
-        assertTrue(consumingDecisions.all { it == Slot.PRIMARY })
+    @Test
+    fun `across every minute of the day the primary slot tracks the window exactly`() {
+        val window = morningConfig.window
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val decision = decide(at = midnight.plusMinutes(minute.toLong()))
+            val expectedArmed = window.contains(minute)
+
+            assertEquals(expectedArmed, decision.armed, "armed at minute $minute")
+            assertEquals(
+                if (expectedArmed) localNews else instagram,
+                decision.target,
+                "target at minute $minute",
+            )
+        }
     }
 
     @Test
+    fun `across every minute of the day an overnight window tracks its own hours`() {
+        val window = overnightConfig.window
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val decision = decide(config = overnightConfig, at = midnight.plusMinutes(minute.toLong()))
+
+            assertEquals(window.contains(minute), decision.armed, "armed at minute $minute")
+        }
+    }
+
+    @Test
+    fun `a primary tap consumes exactly when it is armed and never otherwise`() {
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val decision = decide(at = midnight.plusMinutes(minute.toLong()))
+
+            assertEquals(
+                decision.armed,
+                decision.consumes != null,
+                "consume disagreed with armed at minute $minute",
+            )
+        }
+    }
+
+    @Test
+    fun `the second slot never consumes the swap at any minute of the day`() {
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val decision = decide(at = midnight.plusMinutes(minute.toLong()), slot = Slot.SECONDARY)
+
+            assertNull(decision.consumes, "second slot consumed at minute $minute")
+        }
+    }
+
+    @Test
+    fun `a consumed date always matches the occurrence the tap fell in`() {
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val moment = midnight.plusMinutes(minute.toLong())
+            val decision = decide(config = overnightConfig, at = moment)
+
+            assertEquals(
+                overnightConfig.window.occurrenceDate(moment),
+                decision.consumes,
+                "wrong occurrence recorded at minute $minute",
+            )
+        }
+    }
+
+    @Test
+    fun `replaying a consumption always closes the swap for that occurrence`() {
+        // Whatever moment first fires, feeding its recorded date back must disarm every other
+        // moment in the same occurrence. This is the property the whole design rests on.
+        val midnight = at(2026, 3, 14, 0, 0)
+
+        for (minute in 0 until MINUTES_PER_DAY) {
+            val moment = midnight.plusMinutes(minute.toLong())
+            val first = decide(config = overnightConfig, at = moment)
+            if (first.consumes == null) continue
+
+            val replay = decide(config = overnightConfig, lastConsumed = first.consumes, at = moment)
+
+            assertFalse(replay.armed, "swap stayed armed after consuming at minute $minute")
+            assertEquals(instagram, replay.target, "wrong target after consuming at minute $minute")
+        }
+    }
+
+    // --- Robustness --------------------------------------------------------------------
+
+    @Test
     fun `a consumption date in the future does not wedge the swap shut`() {
-        val clockWentBackwards = LocalDate.of(2026, 12, 25)
-        val decision = decide(lastConsumed = clockWentBackwards, at = at(2026, 3, 14, 7, 0))
+        val decision = decide(
+            lastConsumed = LocalDate.of(2026, 12, 25),
+            at = at(2026, 3, 14, 7, 0),
+        )
 
         assertTrue(decision.armed)
         assertEquals(localNews, decision.target)
@@ -254,5 +361,13 @@ class SwapDeciderTest {
         val decision = decide(config = config, at = at(2026, 3, 14, 7, 0))
 
         assertEquals(LaunchTarget.App("com.duolingo"), decision.target)
+    }
+
+    @Test
+    fun `an armed primary decision always carries a date to record`() {
+        val decision = decide(at = at(2026, 3, 14, 6, 0))
+
+        assertTrue(decision.armed)
+        assertNotNull(decision.consumes)
     }
 }

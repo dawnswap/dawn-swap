@@ -35,13 +35,17 @@ object ShortcutController {
      * about which app opens depends on this succeeding.
      */
     fun refresh(context: Context) {
-        val shortcuts = activeSlots(context).mapNotNull { build(context, it) }
+        // Every slot, not only the ones we would pin today. A second shortcut pinned while
+        // swap mode was on stays on the home screen after it is switched off, and a shortcut
+        // we stop repainting freezes wearing the icon of an app it no longer opens.
+        val shortcuts = Slot.entries.mapNotNull { build(context, it) }
         if (shortcuts.isEmpty()) return
 
         runCatching { ShortcutManagerCompat.updateShortcuts(context, shortcuts) }
     }
 
-    fun activeSlots(context: Context): List<Slot> =
+    /** The slots worth putting on the home screen — the second one only in swap mode. */
+    fun slotsToPin(context: Context): List<Slot> =
         if (SwapRepository(context).swapMode) Slot.entries else listOf(Slot.PRIMARY)
 
     private fun build(context: Context, slot: Slot): ShortcutInfoCompat? {

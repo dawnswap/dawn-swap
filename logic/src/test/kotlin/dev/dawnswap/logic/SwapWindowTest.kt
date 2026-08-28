@@ -137,4 +137,50 @@ class SwapWindowTest {
     fun `of builds the same window as raw minutes`() {
         assertEquals(SwapWindow(6 * 60 + 30, 10 * 60 + 15), SwapWindow.of(6, 30, 10, 15))
     }
+
+    // --- Values arriving from storage --------------------------------------------------
+    // Storage is not a trusted source. Constructing directly from it would throw inside a
+    // property getter and crash the app on every tap, recoverable only by clearing app data.
+
+    @Test
+    fun `sanitized keeps values that are in range`() {
+        val fallback = SwapWindow.of(6, 0, 10, 0)
+
+        assertEquals(SwapWindow(90, 200), SwapWindow.sanitized(90, 200, fallback))
+    }
+
+    @ParameterizedTest(name = "sanitized({0}, {1}) falls back")
+    @CsvSource(
+        "-1, 600",
+        "360, -1",
+        "1440, 600",
+        "360, 1440",
+        "99999, 99999",
+        "-2147483648, 0",
+    )
+    fun `sanitized falls back on values outside a single day`(start: Int, end: Int) {
+        val fallback = SwapWindow.of(6, 0, 10, 0)
+
+        assertEquals(fallback, SwapWindow.sanitized(start, end, fallback))
+    }
+
+    @Test
+    fun `sanitized accepts both edges of the valid range`() {
+        val fallback = SwapWindow.of(6, 0, 10, 0)
+        val edges = SwapWindow.sanitized(0, MINUTES_PER_DAY - 1, fallback)
+
+        assertEquals(SwapWindow(0, MINUTES_PER_DAY - 1), edges)
+    }
+
+    @Test
+    fun `sanitized never throws for any int pair it is handed`() {
+        val fallback = SwapWindow.of(6, 0, 10, 0)
+        val hostile = listOf(Int.MIN_VALUE, -1, 0, 1439, 1440, Int.MAX_VALUE)
+
+        for (start in hostile) {
+            for (end in hostile) {
+                SwapWindow.sanitized(start, end, fallback)
+            }
+        }
+    }
 }

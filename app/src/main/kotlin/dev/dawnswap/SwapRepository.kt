@@ -37,9 +37,10 @@ class SwapRepository(context: Context) {
         set(value) = writeTarget(KEY_DECOY, value)
 
     var window: SwapWindow
-        get() = SwapWindow(
+        get() = SwapWindow.sanitized(
             prefs.getInt(KEY_START, DEFAULT_START_MINUTE),
             prefs.getInt(KEY_END, DEFAULT_END_MINUTE),
+            fallback = DEFAULT_WINDOW,
         )
         set(value) {
             prefs.edit()
@@ -97,5 +98,6 @@ class SwapRepository(context: Context) {
 
         const val DEFAULT_START_MINUTE = 6 * 60
         const val DEFAULT_END_MINUTE = 10 * 60
+        val DEFAULT_WINDOW = SwapWindow(DEFAULT_START_MINUTE, DEFAULT_END_MINUTE)
     }
 }

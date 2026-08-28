@@ -15,6 +15,13 @@ object Launcher {
 
     private const val FALLBACK_ICON_PX = 192
 
+    /**
+     * Some drawables report enormous intrinsic sizes. Rasterizing one at face value would
+     * allocate tens of megabytes in the trampoline, on the tap path. No launcher needs more
+     * than this.
+     */
+    private const val MAX_ICON_PX = 512
+
     /** The intent that opens [target], or null when it can no longer be opened. */
     fun intentFor(context: Context, target: LaunchTarget): Intent? = when (target) {
         is LaunchTarget.App -> context.packageManager.getLaunchIntentForPackage(target.packageName)
@@ -67,7 +74,8 @@ object Launcher {
      * the `AdaptiveIconDrawable` that essentially every modern app returns.
      */
     private fun Drawable.rasterize(): Bitmap {
-        val size = maxOf(intrinsicWidth, intrinsicHeight).takeIf { it > 0 } ?: FALLBACK_ICON_PX
+        val intrinsic = maxOf(intrinsicWidth, intrinsicHeight)
+        val size = if (intrinsic > 0) intrinsic.coerceAtMost(MAX_ICON_PX) else FALLBACK_ICON_PX
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         setBounds(0, 0, size, size)
         draw(Canvas(bitmap))

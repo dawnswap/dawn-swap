@@ -53,5 +53,19 @@ data class SwapWindow(val startMinute: Int, val endMinute: Int) {
             startHour * MINUTES_PER_HOUR + startMinute,
             endHour * MINUTES_PER_HOUR + endMinute,
         )
+
+        /**
+         * Builds a window from values that came from storage, falling back when they are out
+         * of range.
+         *
+         * The constructor rightly rejects nonsense, but storage is not a trusted source: a
+         * corrupted preference file would otherwise throw from inside a property getter and
+         * crash the app on every single tap, with no way back except clearing app data.
+         */
+        fun sanitized(startMinute: Int, endMinute: Int, fallback: SwapWindow): SwapWindow {
+            val valid = startMinute in 0 until MINUTES_PER_DAY &&
+                endMinute in 0 until MINUTES_PER_DAY
+            return if (valid) SwapWindow(startMinute, endMinute) else fallback
+        }
     }
 }

@@ -33,6 +33,13 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    testOptions {
+        unitTests {
+            // Robolectric needs the merged manifest and resources to stand the app up.
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -41,4 +48,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.recyclerview)
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

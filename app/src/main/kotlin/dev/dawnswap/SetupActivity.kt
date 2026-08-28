@@ -139,7 +139,7 @@ class SetupActivity : AppCompatActivity() {
             return
         }
 
-        ShortcutController.activeSlots(this).forEach { ShortcutController.requestPin(this, it) }
+        ShortcutController.slotsToPin(this).forEach { ShortcutController.requestPin(this, it) }
         ArmScheduler.schedule(this)
         toast(R.string.pin_requested)
     }

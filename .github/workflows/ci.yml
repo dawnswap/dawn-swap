@@ -32,16 +32,19 @@ jobs:
           gradle-version: '8.10.2'
 
       - name: Run unit tests
-        run: gradle :logic:test
+        run: gradle :logic:test :app:testDebugUnitTest
 
       # Gradle's test task passes trivially when it finds nothing to run, so a green
       # check would otherwise be meaningless. Count the actual cases and print the total.
       - name: Verify tests actually ran
         run: |
-          count=$(cat logic/build/test-results/test/*.xml | grep -o '<testcase ' | wc -l)
-          echo "Executed tests: $count"
-          if [ "$count" -eq 0 ]; then
-            echo "::error::No tests executed - refusing to report a green build."
+          logic=$(cat logic/build/test-results/test/*.xml | grep -o '<testcase ' | wc -l)
+          app=$(cat app/build/test-results/testDebugUnitTest/*.xml | grep -o '<testcase ' | wc -l)
+          echo "Logic tests: $logic"
+          echo "Android tests: $app"
+          echo "Executed tests: $((logic + app))"
+          if [ "$logic" -eq 0 ] || [ "$app" -eq 0 ]; then
+            echo "::error::A test module executed nothing - refusing to report a green build."
             exit 1
           fi
 
@@ -59,4 +62,6 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: test-results
-          path: logic/build/test-results/test/*.xml
+          path: |
+            logic/build/test-results/test/*.xml
+            app/build/test-results/testDebugUnitTest/*.xml

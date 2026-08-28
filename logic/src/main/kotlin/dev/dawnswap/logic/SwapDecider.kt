@@ -25,13 +25,15 @@ data class SwapConfig(
 
 /**
  * @param target what to open — and, equally, whose icon the slot should be wearing.
- * @param consume whether this tap uses up today's swap.
  * @param armed whether the swap is currently live.
+ * @param consumes non-null exactly when this tap uses up the swap, carrying the date to
+ *   record. Bundling the date into the decision means a caller cannot record the wrong day,
+ *   nor silently skip the write by recomputing "now" and landing outside the window.
  */
 data class Decision(
     val target: LaunchTarget,
-    val consume: Boolean,
     val armed: Boolean,
+    val consumes: LocalDate?,
 )
 
 /**
@@ -57,8 +59,8 @@ object SwapDecider {
 
         return Decision(
             target = if (showDecoy) config.decoy else config.real,
-            consume = armed && slot == Slot.PRIMARY,
             armed = armed,
+            consumes = occurrence.takeIf { armed && slot == Slot.PRIMARY },
         )
     }
 }
