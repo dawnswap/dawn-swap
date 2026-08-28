@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dawn Swap</string>
+
+    <string name="intro">The first tap in your window opens the replacement. Every tap after that opens the usual app.</string>
+
+    <string name="section_habit">The app you want to interrupt</string>
+    <string name="section_replacement">What to open instead</string>
+    <string name="section_window">When</string>
+    <string name="section_home">Home screen</string>
+
+    <string name="choose_app">Choose app</string>
+    <string name="not_set">Not set</string>
+
+    <string name="replacement_app">An installed app</string>
+    <string name="replacement_url">A web page</string>
+    <string name="url_hint">https://news.example.com</string>
+
+    <string name="window_from">From</string>
+    <string name="window_to">To</string>
+    <string name="window_summary">%1$s to %2$s</string>
+
+    <string name="enabled">Swap enabled</string>
+    <string name="swap_mode">Swap both icons</string>
+    <string name="swap_mode_hint">Adds a second shortcut. While the swap is live it hands back the original app, so it stays one tap away.</string>
+
+    <string name="add_to_home">Add to home screen</string>
+    <string name="try_now">Try it now</string>
+    <string name="placement_hint">Put the shortcut exactly where your thumb already goes, then move the original icon into a folder or your app drawer.</string>
+
+    <string name="pick_app_title">Choose an app</string>
+
+    <string name="finish_setup_first">Choose both apps first.</string>
+    <string name="invalid_url">Enter a web address starting with http:// or https://</string>
+    <string name="target_unavailable">That app is no longer available. Pick another one.</string>
+    <string name="pinning_unsupported">Your launcher does not support adding shortcuts. Try a different launcher, or add the shortcut from its own widget list.</string>
+    <string name="pin_requested">Confirm the shortcut on your home screen.</string>
+    <string name="web_page">Web page</string>
+
+    <string name="status_armed">Live now — the next tap opens your replacement.</string>
+    <string name="status_used">Used for today. It re-arms tomorrow.</string>
+    <string name="status_waiting">Waiting for the window to open.</string>
+    <string name="status_off">Swap is off.</string>
+</resources>

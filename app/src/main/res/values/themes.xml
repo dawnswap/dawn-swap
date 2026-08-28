@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.DawnSwap" parent="Theme.Material3.DayNight" />
+
+    <!--
+        The trampoline never draws anything. A framework translucent theme keeps it free of
+        AppCompat coupling; Theme.NoDisplay is deliberately avoided because it throws
+        IllegalStateException if the activity ever reaches onResume still visible.
+    -->
+    <style name="Theme.DawnSwap.Invisible" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+</resources>
