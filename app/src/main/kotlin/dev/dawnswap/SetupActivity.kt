@@ -10,6 +10,7 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import dev.dawnswap.databinding.ActivitySetupBinding
 import dev.dawnswap.logic.LaunchTarget
+import dev.dawnswap.logic.MINUTES_PER_HOUR
 import dev.dawnswap.logic.Slot
 import dev.dawnswap.logic.SwapDecider
 import dev.dawnswap.logic.SwapWindow
@@ -220,9 +221,5 @@ class SetupActivity : AppCompatActivity() {
 
     private fun View.isVisible(visible: Boolean) {
         visibility = if (visible) View.VISIBLE else View.GONE
-    }
-
-    private companion object {
-        const val MINUTES_PER_HOUR = 60
     }
 }

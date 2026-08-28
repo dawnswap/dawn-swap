@@ -6,8 +6,8 @@ import java.time.LocalDateTime
 /** Minutes elapsed since local midnight. */
 internal fun LocalDateTime.minuteOfDay(): Int = hour * MINUTES_PER_HOUR + minute
 
-internal const val MINUTES_PER_HOUR = 60
-internal const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
+const val MINUTES_PER_HOUR = 60
+const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
 
 /**
  * The daily stretch of time during which the swap is allowed to fire.

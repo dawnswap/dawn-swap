@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -49,14 +49,14 @@ jobs:
         run: gradle :app:assembleDebug
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dawn-swap-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-results
           path: logic/build/test-results/test/*.xml
