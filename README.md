@@ -39,7 +39,7 @@ There is **no `INTERNET` permission** in the manifest. The app cannot phone home
 
 ## Setup
 
-1. Install the APK and open **Dawn Swap**.
+1. Build and install the APK — see [Building it](#building-it) — then open **Dawn Swap**.
 2. Pick **the app you want to interrupt** — the one your thumb goes to.
 3. Pick **what to open instead** — another installed app, or a web address (the original poster's replacement was a webapp they built).
 4. Set your window. Default is 06:00–10:00. Windows that cross midnight work fine.
@@ -79,11 +79,15 @@ gradle :app:testDebugUnitTest  # Android layer, via Robolectric
 gradle :app:assembleDebug      # the APK
 ```
 
-You need JDK 17 and the Android SDK (platform 35). The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs both test suites and builds the APK — fork the repo and it will run for you, artifact included.
+You need JDK 17 and the Android SDK (platform 35).
+
+**There is no prebuilt APK to download.** The Actions tab is empty on purpose — this repo is published anonymously, and a workflow run permanently records the GitHub account that triggered it. Runs are verified and then deleted, which removes their artifacts too.
+
+Forking gets you the build for free: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs both test suites and uploads the APK, and on your own fork the runs are yours to keep.
 
 ## Status
 
-Both layers are covered by tests that run on every push, and CI refuses to report success if either module executes zero tests.
+Both layers are covered by the workflow above, which refuses to report success if either module executes zero tests. Last verified green: 150 tests — 112 logic, 38 Android — plus a successful debug APK build.
 
 - **Decision logic** — exhaustively tested, including minute-by-minute sweeps across a full day for both normal and midnight-crossing windows.
 - **Android layer** — tested with Robolectric, which stands the real activity up on the JVM. The end-to-end path is asserted the way a launcher actually drives it: build the intent a pinned shortcut carries, hand it to the trampoline, and check which app comes out.
