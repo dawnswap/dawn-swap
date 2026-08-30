@@ -73,6 +73,45 @@ class SwapWindowTest {
         assertFalse(SwapWindow.of(6, 0, 6, 0).crossesMidnight)
     }
 
+    @ParameterizedTest(name = "{0}:00 to {0}:00 is empty")
+    @CsvSource("0", "6", "13", "23")
+    fun `a window that starts and ends at the same time reports itself empty`(hour: Int) {
+        assertTrue(SwapWindow.of(hour, 0, hour, 0).isEmpty)
+    }
+
+    @Test
+    fun `an ordinary window is not empty`() {
+        assertFalse(morning.isEmpty)
+    }
+
+    @Test
+    fun `a window crossing midnight is not empty`() {
+        assertFalse(overnight.isEmpty)
+    }
+
+    @Test
+    fun `a one-minute window is not empty`() {
+        assertFalse(SwapWindow(startMinute = 400, endMinute = 401).isEmpty)
+    }
+
+    @Test
+    fun `an empty window is exactly the set of windows that can never contain anything`() {
+        // The setup screen warns based on isEmpty, so it must agree with contains() at every
+        // minute - a window flagged empty that could still fire would be a lying warning.
+        for (start in 0 until MINUTES_PER_DAY step 37) {
+            for (end in 0 until MINUTES_PER_DAY step 53) {
+                val window = SwapWindow(start, end)
+                val everContains = (0 until MINUTES_PER_DAY).any { window.contains(it) }
+
+                assertEquals(
+                    window.isEmpty,
+                    !everContains,
+                    "isEmpty disagreed with contains() for $start..$end",
+                )
+            }
+        }
+    }
+
     @Test
     fun `a window covering all but one minute still excludes that minute`() {
         val almostAllDay = SwapWindow(startMinute = 1, endMinute = 0)

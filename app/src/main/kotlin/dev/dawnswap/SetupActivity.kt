@@ -117,6 +117,9 @@ class SetupActivity : AppCompatActivity() {
 
     private fun status(): String {
         val config = repository.config() ?: return getString(R.string.finish_setup_first)
+        // Checked before "off", because a swap that is on but can never fire is the
+        // confusing case worth naming.
+        if (config.window.isEmpty) return getString(R.string.status_window_empty)
         if (!config.enabled) return getString(R.string.status_off)
 
         val now = LocalDateTime.now()

@@ -41,4 +41,5 @@
     <string name="status_used">Used for today. It re-arms tomorrow.</string>
     <string name="status_waiting">Waiting for the window to open.</string>
     <string name="status_off">Swap is off.</string>
+    <string name="status_window_empty">Your window starts and ends at the same time, so the swap can never fire. Pick a different end time.</string>
 </resources>

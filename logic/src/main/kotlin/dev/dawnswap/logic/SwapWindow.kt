@@ -26,8 +26,17 @@ data class SwapWindow(val startMinute: Int, val endMinute: Int) {
 
     val crossesMidnight: Boolean get() = endMinute < startMinute
 
+    /**
+     * A window that can never contain anything, because it starts and ends at the same time.
+     *
+     * Easy to create by accident in a two-button time picker, and the symptom is the app
+     * simply never firing — so the setup screen calls it out rather than sitting there
+     * looking like it is waiting for a morning that never comes.
+     */
+    val isEmpty: Boolean get() = startMinute == endMinute
+
     fun contains(minuteOfDay: Int): Boolean = when {
-        startMinute == endMinute -> false
+        isEmpty -> false
         crossesMidnight -> minuteOfDay >= startMinute || minuteOfDay < endMinute
         else -> minuteOfDay >= startMinute && minuteOfDay < endMinute
     }
