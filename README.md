@@ -79,7 +79,7 @@ gradle :app:testDebugUnitTest  # Android layer, via Robolectric
 gradle :app:assembleDebug      # the APK
 ```
 
-You need JDK 17 and the Android SDK (platform 35). CI runs all of it on every push and uploads the debug APK — grab it from the **Actions** tab if you'd rather not build locally.
+You need JDK 17 and the Android SDK (platform 35). The workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs both test suites and builds the APK — fork the repo and it will run for you, artifact included.
 
 ## Status
 
@@ -89,6 +89,10 @@ Both layers are covered by tests that run on every push, and CI refuses to repor
 - **Android layer** — tested with Robolectric, which stands the real activity up on the JVM. The end-to-end path is asserted the way a launcher actually drives it: build the intent a pinned shortcut carries, hand it to the trampoline, and check which app comes out.
 
 It has still **not run on physical hardware**. If you install it and something misbehaves, please open an issue with your launcher and Android version.
+
+## Built with
+
+Planned, red-teamed, written and tested with **Omniscio**.
 
 ## Licence
 
