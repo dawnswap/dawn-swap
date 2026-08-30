@@ -87,7 +87,7 @@ Forking gets you the build for free: [`.github/workflows/ci.yml`](.github/workfl
 
 ## Status
 
-Both layers are covered by the workflow above, which refuses to report success if either module executes zero tests. Last verified green: 150 tests — 112 logic, 38 Android — plus a successful debug APK build.
+Both layers are covered by the workflow above, which refuses to report success if either module executes zero tests. Last verified green: 164 tests — 120 logic, 44 Android — plus a successful debug APK build.
 
 - **Decision logic** — exhaustively tested, including minute-by-minute sweeps across a full day for both normal and midnight-crossing windows.
 - **Android layer** — tested with Robolectric, which stands the real activity up on the JVM. The end-to-end path is asserted the way a launcher actually drives it: build the intent a pinned shortcut carries, hand it to the trampoline, and check which app comes out.
